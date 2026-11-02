@@ -1,0 +1,23 @@
+{
+  "name": "webform",
+  "version": "1.0.0",
+  "description": "WEBFORM - Ouvrez votre boutique en ligne en quelques minutes",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Adama2025/WEBFORM.git"
+  },
+  "keywords": [
+    "webform",
+    "ecommerce",
+    "boutique"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@vercel/analytics": "^2.0.1"
+  }
+}
