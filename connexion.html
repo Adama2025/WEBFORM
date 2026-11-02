@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fr"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Connexion et inscription — WEBFORM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+</head><body>
+<div class="auth">
+  <aside class="auth__side">
+    <a class="logo" href="index.html"><span class="logo__mark">W</span>webform</a>
+    <h1>Vendez en ligne, ou achetez chez les commerçants d'ici.</h1>
+    <ul><li>30 jours d'essai gratuit pour les vendeurs</li><li>Aucun paiement à l'inscription</li><li>Votre boutique sur votre propre adresse</li></ul>
+  </aside>
+  <main class="auth__main"><div class="auth__box">
+    <div class="tabs" role="tablist"><button type="button" role="tab" data-m="connexion" class="on">Connexion</button><button type="button" role="tab" data-m="inscription">Inscription</button></div>
+
+    <form id="fLogin" novalidate>
+      <label>Adresse e-mail<input name="email" type="email" autocomplete="email" required></label>
+      <label>Mot de passe<input name="mdp" type="password" autocomplete="current-password" required></label>
+      <p class="err" id="eLogin" role="alert"></p>
+      <button class="btn btn--sun btn--full" type="submit">Se connecter</button>
+      <button class="link" type="button" id="toReset">Mot de passe oublié ?</button>
+      <div class="or"><span>ou</span></div>
+      <div class="gbtn" id="gBtnLogin"></div>
+      <button class="btn btn--line btn--full" type="button" disabled title="Bientôt disponible">Continuer avec Apple (bientôt)</button>
+    </form>
+
+    <form id="fSignup" hidden novalidate>
+      <fieldset class="roles"><legend class="hint" style="margin-bottom:8px">Je veux</legend>
+        <label class="role"><input type="radio" name="role" value="vendeur" checked><b>Vendre</b><small>Ouvrir ma boutique, 30 jours gratuits</small></label>
+        <label class="role"><input type="radio" name="role" value="acheteur"><b>Acheter</b><small>Commander et suivre mes achats</small></label>
+      </fieldset>
+      <label>Nom complet<input name="nom" type="text" autocomplete="name" required></label>
+      <div class="row">
+        <label>Téléphone<input name="tel" type="tel" autocomplete="tel" placeholder="77 000 00 00" required></label>
+        <label>E-mail<input name="email" type="email" autocomplete="email" required></label>
+      </div>
+      <label>Mot de passe<input name="mdp" type="password" minlength="8" autocomplete="new-password" required><span class="hint">8 caractères minimum</span></label>
+      <div id="sellerFields">
+        <label>Nom de la boutique<input name="boutique" type="text" maxlength="30" placeholder="Babs Habits"></label>
+        <p class="slugline" id="slugline" role="status" aria-live="polite"></p>
+        <label style="margin-top:14px">Formule à essayer<select name="plan"><option value="starter">Starter · 2 500 FCFA / mois ensuite</option><option value="business">Business · 7 500 FCFA / 2 mois ensuite</option><option value="premium">Premium · 20 000 FCFA / 3 mois ensuite</option></select></label>
+      </div>
+      <p class="err" id="eSignup" role="alert"></p>
+      <button class="btn btn--sun btn--full" type="submit" id="goSignup">Créer mon compte vendeur gratuit</button>
+      <div class="or"><span>ou</span></div>
+      <div class="gbtn" id="gBtnSignup"></div>
+      <button class="btn btn--line btn--full" type="button" disabled title="Bientôt disponible">Continuer avec Apple (bientôt)</button>
+    </form>
+
+    <form id="fReset" hidden novalidate>
+      <h2>Nouveau mot de passe</h2>
+      <p class="hint">Version démo : entrez votre e-mail et choisissez un nouveau mot de passe. Avec le serveur, un lien sera envoyé par e-mail.</p>
+      <label>Adresse e-mail<input name="email" type="email" required></label>
+      <label>Nouveau mot de passe<input name="mdp" type="password" minlength="8" required></label>
+      <p class="err" id="eReset" role="alert"></p>
+      <button class="btn btn--dark btn--full" type="submit">Changer le mot de passe</button>
+      <button class="link" type="button" id="backLogin">Retour à la connexion</button>
+    </form>
+  </div></main>
+</div>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="db.js"></script>
+<script src="auth.js"></script>
+</body></html>
