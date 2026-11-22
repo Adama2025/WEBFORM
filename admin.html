@@ -1,0 +1,198 @@
+const SUPABASE_URL = "https://fyzngosiphzajiwizqva.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_6qeXbLCtMnNEYRF-anEWPw_v8q5vd9K";
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WEBFORM — Administration</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+:root{--plum:#2E0A23;--plum2:#4a1a3b;--gold:#E8A317;--bg:#F6F4F8;--card:#fff;--ink:#1d1320;--mute:#6e6275;--line:#e4dfe8;--bad:#b3261e}
+@media(prefers-color-scheme:dark){:root{--bg:#160a13;--card:#22111d;--ink:#f3ecf2;--mute:#b3a5b0;--line:#3b2434}}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.5 'Plus Jakarta Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+button,input,select,textarea{font:inherit;color:inherit}
+.center{min-height:100vh;display:grid;place-items:center;padding:20px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:28px;width:100%;max-width:400px}
+h1{font-size:24px;margin:0 0 6px;font-weight:800}h2{font-size:20px;margin:0 0 16px}
+p.m{color:var(--mute);margin:0 0 18px}
+input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);margin-bottom:10px}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+.btn{background:var(--plum);color:#fff;border:0;border-radius:8px;padding:10px 16px;font-weight:700;cursor:pointer;width:100%}
+.btn.gold{background:var(--gold);color:#2E0A23}.btn.s{width:auto;padding:6px 12px}
+.btn.o{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.err{color:var(--bad);margin:8px 0 0;min-height:20px}
+.app{display:grid;grid-template-columns:230px 1fr;min-height:100vh}
+aside{background:var(--plum);color:#fff;padding:20px 14px;display:flex;flex-direction:column;gap:4px}
+aside b{font-size:19px;padding:0 10px 4px}aside small{padding:0 10px 16px;color:#cdb9c7}
+aside button{background:none;border:0;color:#e9dce5;text-align:left;padding:10px;border-radius:8px;cursor:pointer}
+aside button.on{background:var(--plum2);color:#fff;font-weight:700;box-shadow:inset 3px 0 var(--gold)}
+aside .sp{flex:1}
+main{padding:28px;overflow-x:auto}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:24px}
+.st{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+.st span{color:var(--mute);font-size:13px}.st div{font-size:26px;font-weight:800}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-size:13px;color:var(--mute);font-weight:500}td input,td select{margin:0;padding:6px 8px;width:auto}
+.form{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:10px;margin-bottom:18px;align-items:start}
+.form input{margin:0}.tag{background:var(--gold);color:#2E0A23;border-radius:20px;padding:2px 10px;font-size:12px;font-weight:700}
+.empty{padding:28px;text-align:center;color:var(--mute);background:var(--card);border:1px dashed var(--line);border-radius:12px}
+@media(max-width:760px){.app{grid-template-columns:1fr}aside{flex-direction:row;flex-wrap:wrap;align-items:center}aside small,aside .sp{display:none}.form{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+/* ====== 1. COLLEZ VOS CLÉS SUPABASE (Project Settings > API) ====== */
+const SUPABASE_URL = "https://VOTRE-PROJET.supabase.co";
+const SUPABASE_ANON_KEY = "VOTRE_CLE_ANON_PUBLIQUE";
+/* ================================================================== */
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fcfa = n => new Intl.NumberFormat('fr-FR').format(n || 0) + ' FCFA';
+const STATUTS = ['nouvelle','confirmee','preparee','expediee','livree','annulee'];
+const LIBELLES = {nouvelle:'Nouvelle',confirmee:'Confirmée',preparee:'Préparée',expediee:'Expédiée',livree:'Livrée',annulee:'Annulée'};
+let me = null, shop = null, isAdmin = false, tab = 'dash';
+
+function view(html){ $('#root').innerHTML = html; }
+
+function loginView(msg=''){
+  view(`<div class="center"><div class="box">
+    <h1>WEBFORM</h1><p class="m">Connectez-vous à votre espace administration.</p>
+    <button class="btn gold" onclick="google()">Continuer avec Google</button>
+    <p class="m" style="text-align:center;margin:14px 0">ou</p>
+    <input id="em" type="email" placeholder="Adresse e-mail" autocomplete="email">
+    <input id="pw" type="password" placeholder="Mot de passe (6 caractères minimum)" autocomplete="current-password">
+    <button class="btn" onclick="emailAuth(false)">Se connecter</button>
+    <button class="btn o" style="margin-top:8px" onclick="emailAuth(true)">Créer un compte</button>
+    <p class="err" id="err">${esc(msg)}</p></div></div>`);
+}
+async function google(){
+  const {error} = await sb.auth.signInWithOAuth({provider:'google', options:{redirectTo: location.origin + location.pathname}});
+  if(error) $('#err').textContent = error.message;
+}
+async function emailAuth(signup){
+  const email = $('#em').value.trim(), password = $('#pw').value;
+  const r = signup ? await sb.auth.signUp({email,password}) : await sb.auth.signInWithPassword({email,password});
+  if(r.error) return $('#err').textContent = r.error.message;
+  if(signup && !r.data.session) return $('#err').textContent = 'Compte créé. Vérifiez votre boîte e-mail pour confirmer.';
+  start();
+}
+async function logout(){ await sb.auth.signOut(); me = shop = null; loginView(); }
+
+function setupView(msg=''){
+  view(`<div class="center"><div class="box"><h2>Créez votre boutique</h2>
+    <input id="nm" placeholder="Nom de la boutique (ex. Babs Habits)">
+    <input id="sl" placeholder="Adresse (ex. babshabits)">
+    <p class="m" style="margin:-4px 0 12px;font-size:13px">Votre adresse : <b id="pv">…</b>.webform.sn — 30 jours d'essai gratuits.</p>
+    <button class="btn gold" onclick="createShop()">Créer ma boutique</button>
+    <p class="err" id="err">${esc(msg)}</p>
+    <button class="btn o" style="margin-top:10px" onclick="logout()">Se déconnecter</button></div></div>`);
+  $('#nm').oninput = e => { $('#sl').value = slug(e.target.value); $('#pv').textContent = $('#sl').value || '…'; };
+  $('#sl').oninput = e => { e.target.value = slug(e.target.value); $('#pv').textContent = e.target.value || '…'; };
+}
+const slug = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,30);
+async function createShop(){
+  const {error} = await sb.from('shops').insert({name:$('#nm').value.trim(), slug:$('#sl').value});
+  if(error) return $('#err').textContent = error.code === '23505' ? 'Cette adresse est déjà prise. Choisissez-en une autre.' : error.message;
+  start();
+}
+
+async function start(){
+  const {data:{user}} = await sb.auth.getUser();
+  if(!user) return loginView();
+  me = user;
+  isAdmin = !!(await sb.from('platform_admins').select('user_id').eq('user_id', user.id).maybeSingle()).data;
+  shop = (await sb.from('shops').select('*').eq('owner_id', user.id).maybeSingle()).data;
+  if(!shop && !isAdmin) return setupView();
+  tab = shop ? 'dash' : 'shops';
+  shell();
+}
+function shell(){
+  view(`<div class="app"><aside>
+    <b>WEBFORM</b><small>${esc(shop ? shop.name : 'Administration')}</small>
+    ${shop ? `<button data-t="dash">Tableau de bord</button><button data-t="products">Produits</button><button data-t="orders">Commandes</button>` : ''}
+    ${isAdmin ? `<button data-t="shops">Toutes les boutiques</button>` : ''}
+    <span class="sp"></span><small>${esc(me.email)}</small><button onclick="logout()">Se déconnecter</button>
+  </aside><main id="main"></main></div>`);
+  document.querySelectorAll('aside [data-t]').forEach(b => b.onclick = () => { tab = b.dataset.t; render(); });
+  render();
+}
+async function render(){
+  document.querySelectorAll('aside [data-t]').forEach(b => b.classList.toggle('on', b.dataset.t === tab));
+  $('#main').innerHTML = '<p class="m">Chargement…</p>';
+  ({dash, products, orders, shops})[tab]();
+}
+
+async function dash(){
+  const [p, o] = await Promise.all([
+    sb.from('products').select('*').eq('shop_id', shop.id),
+    sb.from('orders').select('*').eq('shop_id', shop.id)]);
+  const prods = p.data || [], ords = o.data || [];
+  const ca = ords.filter(x => x.paid && x.status !== 'annulee').reduce((s,x) => s + x.total, 0);
+  const low = prods.filter(x => x.stock <= x.low_stock_alert);
+  const jours = Math.ceil((new Date(shop.trial_ends_at) - Date.now()) / 864e5);
+  $('#main').innerHTML = `<h2>Bonjour, ${esc(shop.name)}</h2>
+    <p class="m">${esc(shop.slug)}.webform.sn · Formule <span class="tag">${esc(shop.plan)}</span> · ${jours > 0 ? jours + ' jours d\'essai restants' : 'Essai terminé'}</p>
+    <div class="stats">
+      <div class="st"><span>Chiffre d'affaires encaissé</span><div>${fcfa(ca)}</div></div>
+      <div class="st"><span>Commandes</span><div>${ords.length}</div></div>
+      <div class="st"><span>À traiter</span><div>${ords.filter(x => x.status === 'nouvelle').length}</div></div>
+      <div class="st"><span>Produits</span><div>${prods.length}</div></div></div>
+    <h2>Stock faible</h2>
+    ${low.length ? `<table><tr><th>Produit</th><th>Restant</th></tr>${low.map(x => `<tr><td>${esc(x.name)}</td><td>${x.stock}</td></tr>`).join('')}</table>`
+      : '<div class="empty">Aucune alerte de stock pour le moment.</div>'}`;
+}
+
+async function products(){
+  const {data} = await sb.from('products').select('*').eq('shop_id', shop.id).order('created_at', {ascending:false});
+  $('#main').innerHTML = `<h2>Produits</h2>
+    <div class="form"><input id="pn" placeholder="Nom du produit"><input id="pp" type="number" min="0" placeholder="Prix (FCFA)"><input id="ps" type="number" min="0" placeholder="Stock">
+    <button class="btn gold s" onclick="addProduct()">Ajouter</button></div><p class="err" id="err"></p>
+    ${data?.length ? `<table><tr><th>Produit</th><th>Prix</th><th>Stock</th><th>En vente</th><th></th></tr>${data.map(x => `<tr>
+      <td>${esc(x.name)}</td><td>${fcfa(x.price)}</td>
+      <td><input type="number" min="0" value="${x.stock}" style="width:80px" onchange="upd('${x.id}',{stock:+this.value})"></td>
+      <td><input type="checkbox" ${x.active ? 'checked' : ''} style="width:auto" onchange="upd('${x.id}',{active:this.checked})"></td>
+      <td><button class="btn o s" onclick="delProduct('${x.id}')">Supprimer</button></td></tr>`).join('')}</table>`
+      : '<div class="empty">Aucun produit. Ajoutez le premier avec le formulaire ci-dessus.</div>'}`;
+}
+async function addProduct(){
+  const name = $('#pn').value.trim(), price = +$('#pp').value, stock = +$('#ps').value || 0;
+  if(!name || !(price >= 0)) return $('#err').textContent = 'Indiquez un nom et un prix.';
+  const {error} = await sb.from('products').insert({shop_id: shop.id, name, price, stock});
+  error ? $('#err').textContent = error.message : products();
+}
+async function upd(id, patch){ const {error} = await sb.from('products').update(patch).eq('id', id); if(error) alert(error.message); }
+async function delProduct(id){ if(confirm('Supprimer ce produit ?')){ await sb.from('products').delete().eq('id', id); products(); } }
+
+async function orders(){
+  const {data} = await sb.from('orders').select('*').eq('shop_id', shop.id).order('created_at', {ascending:false});
+  $('#main').innerHTML = `<h2>Commandes</h2>` + (data?.length ? `<table><tr><th>N°</th><th>Client</th><th>Total</th><th>Paiement</th><th>Statut</th></tr>${data.map(x => `<tr>
+    <td>#${x.number}</td><td>${esc(x.customer_name)}<br><small>${esc(x.customer_phone)}</small></td><td>${fcfa(x.total)}</td>
+    <td>${esc(x.payment_method || '—')} ${x.paid ? '✓' : ''}</td>
+    <td><select onchange="setStatus('${x.id}',this.value)">${STATUTS.map(s => `<option value="${s}" ${s === x.status ? 'selected' : ''}>${LIBELLES[s]}</option>`).join('')}</select></td></tr>`).join('')}</table>`
+    : '<div class="empty">Aucune commande pour le moment. Partagez le lien de votre boutique sur WhatsApp.</div>');
+}
+async function setStatus(id, status){ const {error} = await sb.from('orders').update({status}).eq('id', id); if(error) alert(error.message); }
+
+async function shops(){
+  const {data} = await sb.from('shops').select('*').order('created_at', {ascending:false});
+  $('#main').innerHTML = `<h2>Toutes les boutiques (${data?.length || 0})</h2>` + (data?.length ? `<table><tr><th>Boutique</th><th>Formule</th><th>Statut</th><th>Fin d'essai</th></tr>${data.map(x => `<tr>
+    <td>${esc(x.name)}<br><small>${esc(x.slug)}.webform.sn</small></td>
+    <td><select onchange="setShop('${x.id}',{plan:this.value})">${['starter','business','premium'].map(p => `<option ${p === x.plan ? 'selected' : ''}>${p}</option>`).join('')}</select></td>
+    <td><select onchange="setShop('${x.id}',{status:this.value})">${['active','expired','suspended'].map(p => `<option ${p === x.status ? 'selected' : ''}>${p}</option>`).join('')}</select></td>
+    <td>${new Date(x.trial_ends_at).toLocaleDateString('fr-FR')}</td></tr>`).join('')}</table>` : '<div class="empty">Aucune boutique créée.</div>');
+}
+async function setShop(id, patch){ const {error} = await sb.from('shops').update(patch).eq('id', id); if(error) alert(error.message); }
+
+sb.auth.onAuthStateChange((ev, s) => { if(ev === 'SIGNED_IN' && (!me || me.id !== s.user.id)) start(); });
+start();
+</script>
+</body>
+</html>
